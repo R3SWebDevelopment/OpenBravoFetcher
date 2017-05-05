@@ -204,7 +204,7 @@ def generateSQLScript():
                 columns = ", ".join(headers)
                 file_path = '/home/ubuntu/.virtualenvs/baysingers-v3/current/csv/{}.csv'.format(name)
                 sql_script = 'COPY "openBravo_{}" ({}) from \'{}\' ' \
-                             'with delimiter as \',\' quote as \'"\';'.format(name.lower(), columns, file_path)
+                             'with delimiter as \',\' quote as \'"\' CSV;'.format(name.lower(), columns, file_path)
                 file.write(sql_script)
 
 

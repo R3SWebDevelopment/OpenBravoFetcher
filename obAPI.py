@@ -2,7 +2,6 @@ import urllib2
 import json
 import ssl
 
-import sys, traceback
 
 OPEN_BRAVO_USERNAME = 'baysingersapi'
 OPEN_BRAVO_PASSWORD = 'openbravo'
@@ -96,6 +95,7 @@ OPEN_BRAVO_RESOURCES = [
      'reference': 'Promotion', },
 ]
 
+
 def full_sync():
     array = OPEN_BRAVO_RESOURCES
     for resource in array:
@@ -135,7 +135,8 @@ def saveData(data=None, name=None):
         except Exception, e:
             print "saveData Error: %s" % e
 
-def saveSQL(data = None , name = None):
+
+def saveSQL(data=None, name=None):
     if data is not None and name is not None and name.strip():
         filename = "syncPushSQL/%s.sql" % name
         try:
@@ -144,10 +145,11 @@ def saveSQL(data = None , name = None):
                 dataString = row.encode('ascii', 'ignore')
                 dataFile.write(dataString)
             dataFile.close()
-        except Exception,e:
+        except Exception, e:
             pass
 
-def readJSONData(name = None):
+
+def readJSONData(name=None):
     data = None
     if name is not None and name.strip():
         filename = "sync/%s.json" % name
@@ -162,17 +164,18 @@ def readJSONData(name = None):
             print "readJSONData - Exception: {}".format(e)
     return data
 
+
 def generateSQL():
     array = OPEN_BRAVO_RESOURCES
     for resource in array:
         url = resource.get('url') or None
         schema_name = resource.get('schema_name') or None
         name = resource.get('name') or None
-        data = readFieldsRelation(name = name)
+        data = readFieldsRelation(name=name)
         print "generateSQL --> name: {} ".format(name)
         try:
             data = json.loads(data)
-            data = normalizeTableFields(data = data , name = name)
+            data = normalizeTableFields(data=data, name=name)
         except Exception ,e :
             print "generateSQL -- Exception: {}".format(e)
 #            traceback.print_exc(file=sys.stdout)
@@ -181,15 +184,14 @@ def generateSQL():
         if data is not None:
             sql = []
             sql.append('COPY "openBravo_%s" ' % name.lower())
-            fields = [ '"%s"' % data.get(k) for k in data.keys() if data.get(k) is not None and data.get(k).strip() ]
+            fields = ['"%s"' % data.get(k) for k in data.keys() if data.get(k) is not None and data.get(k).strip()]
             fields = ",".join(fields)
             fields = '(%s)' % fields
             sql.append(fields)
-            sql.append(' FROM stdin WITH(NULL \'NULL\' delimiter \'[OBTAB]\');')
-            # sql.append(' FROM stdin WITH(NULL \'NULL\');')
+            sql.append(' FROM stdin WITH(NULL \'NULL\' );')
             sql.append('\n')
             print "generateSQL -- readJSONData --> Begin"
-            obData = readJSONData(name = name)
+            obData = readJSONData(name=name)
             print "CLASS : {}".format(obData.__class__)
             print "generateSQL -- readJSONData --> End"
             valuesArray = []
@@ -207,8 +209,7 @@ def generateSQL():
                     print "generateSQL -- WRITING DATA"
                     for d in obData:
                         values = [cleanData(data=d.get(k)) for k in data.keys()]
-                        # values = "\t".join(values)
-                        values = "[OBTAB]".join(values)
+                        values = "\t".join(values)
                         if first:
                             first = False
                             dataString = "%s" % values.encode('ascii', 'ignore')
@@ -222,14 +223,15 @@ def generateSQL():
                         dataString = row.encode('ascii', 'ignore')
                         dataFile.write(dataString)
                     dataFile.close()
-                except Exception,e:
+                except Exception, e:
                     print "generateSQL -- Exception:{}".format(e)
             else:
                 sql = []
-                print "generateSQL name: %s , size: %s" % (name , len(sql))
-                saveSQL(data = sql , name = name)
+                print "generateSQL name: %s , size: %s" % (name, len(sql))
+                saveSQL(data=sql, name=name)
 
-def normalizeTableFields(data = None , name = None):
+
+def normalizeTableFields(data=None, name=None):
     if data is not None and name is not None and name.strip():
         aux = {}
         DB_NAME = 'openBravo_{}'.format(name).upper()
@@ -242,41 +244,47 @@ def normalizeTableFields(data = None , name = None):
         data = aux
     return data
 
-def cleanData(data = None):
+
+def cleanData(data=None):
     if data is None:
         return 'NULL'
+    if isinstance(data, basestring) and len(data.strip()) == 0:
+        return 'NULL'
     if data is not None and data.__class__ is unicode and data.strip():
-        data = data.replace("'","''")
-        data = data.replace("\r","\\r")
-        data = data.replace("\t","\\t")
-        data = data.replace("\n","\\n\\r\\n")
+        data = data.replace("'", "''")
+        data = data.replace("\r", "\\r")
+        data = data.replace("\t", "\\t")
+        data = data.replace("\n", "\\n\\r\\n")
+        data = data.strip()
     return "%s" % data
 
-def readFieldsRelation(name = None):
+
+def readFieldsRelation(name=None):
     data = None
     if name is not None and name.strip():
         filename = "syncDefinition/%s.json" % name
         try:
-            with open(filename , "r") as ins:
+            with open(filename, "r") as ins:
                 array = []
                 for line in ins:
                     array.append(line)
-                data = "\r\n".join([ l for l in array if l is not None and l.strip() ])
+                data = "\r\n".join([l for l in array if l is not None and l.strip()])
         except:
             pass
     return data
 
-def fetch_json(filename = None):
+
+def fetch_json(filename=None):
     data = {}
     if filename is not None and filename.strip():
         try:
             with open(filename) as data_file:
                 data = json.load(data_file)
-        except Exception,e:
+        except Exception,e :
             pass
     return data
 
 OB_DB_FIELDS = fetch_json('syncDefinition/db_fields.json')
 
-full_sync()
-generateSQL()
+#full_sync()
+# generateSQL()

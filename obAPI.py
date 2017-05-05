@@ -185,7 +185,8 @@ def generateSQL():
             fields = ",".join(fields)
             fields = '(%s)' % fields
             sql.append(fields)
-            sql.append(' FROM stdin WITH(NULL \'NULL\');')
+            sql.append(' FROM stdin WITH(NULL \'NULL\' delimiter \'[OBTAB]\');')
+            # sql.append(' FROM stdin WITH(NULL \'NULL\');')
             sql.append('\n')
             print "generateSQL -- readJSONData --> Begin"
             obData = readJSONData(name = name)
@@ -206,7 +207,8 @@ def generateSQL():
                     print "generateSQL -- WRITING DATA"
                     for d in obData:
                         values = [cleanData(data=d.get(k)) for k in data.keys()]
-                        values = "\t".join(values)
+                        # values = "\t".join(values)
+                        values = "[OBTAB]".join(values)
                         if first:
                             first = False
                             dataString = "%s" % values.encode('ascii', 'ignore')

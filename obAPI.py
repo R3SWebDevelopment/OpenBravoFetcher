@@ -332,7 +332,9 @@ def fetch_json(filename=None):
 def load_definition(name=None):
     definition_str = readFieldsRelation(name=name)
     if definition_str is not None:
-        return json.loads(definition_str)
+        data = json.loads(definition_str)
+        data = normalizeTableFields(data=data, name=name)
+        return data
     else:
         return None
 

@@ -1,6 +1,7 @@
 import urllib2
 import json
 import ssl
+import csv
 
 
 OPEN_BRAVO_USERNAME = 'baysingersapi'
@@ -160,9 +161,33 @@ def readJSONData(name=None):
                 data = data.get('response') or None
             if data is not None and 'data' in data.keys():
                 data = data.get('data') or None
-        except Exception,e:
+        except Exception, e:
             print "readJSONData - Exception: {}".format(e)
     return data
+
+
+def generateCSV():
+    array = OPEN_BRAVO_RESOURCES
+    for resource in array:
+        url = resource.get('url') or None
+        schema_name = resource.get('schema_name') or None
+        name = resource.get('name') or None
+        definition = load_definition(name=name)
+        if definition is not None:
+            headers = [definition.get(key) for key in definition.keys()]
+            file_path = 'csv/{}.csv'.format(name)
+            with open(file_path, 'wb') as file:
+                writer = csv.writer(file, delimiter=',', quoting=csv.QUOTE_ALL, dialect='excel')
+                writer.writerows([headers])
+                obData = readJSONData(name=name)
+                if obData is not None:
+                    rows = []
+                    for d in obData:
+                        row = [d.get(key, 'NULL').encode('ascii', 'ignore').strip()
+                               if isinstance(d.get(key, 'NULL'), basestring)
+                               else d.get(key, '') for key in definition]
+                        rows.append(row)
+                    writer.writerows(rows)
 
 
 def generateSQL():
@@ -176,7 +201,7 @@ def generateSQL():
         try:
             data = json.loads(data)
             data = normalizeTableFields(data=data, name=name)
-        except Exception ,e :
+        except Exception ,e:
             print "generateSQL -- Exception: {}".format(e)
 #            traceback.print_exc(file=sys.stdout)
             data = None
@@ -284,7 +309,16 @@ def fetch_json(filename=None):
             pass
     return data
 
+
+def load_definition(name=None):
+    definition_str = readFieldsRelation(name=name)
+    if definition_str is not None:
+        return json.loads(definition_str)
+    else:
+        return None
+
 OB_DB_FIELDS = fetch_json('syncDefinition/db_fields.json')
 
-#full_sync()
+# full_sync()
 # generateSQL()
+generateCSV()

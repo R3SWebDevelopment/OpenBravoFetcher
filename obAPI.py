@@ -198,7 +198,7 @@ def generateSQLScript():
         name = resource.get('name') or None
         definition = load_definition(name=name)
         if definition is not None:
-            headers = [definition.get(key) for key in definition.keys()]
+            headers = ['"{}"'.format(definition.get(key)) for key in definition.keys()]
             file_path = 'syncPushSQL/{}.sql'.format(name)
             with open(file_path, 'wb') as file:
                 columns = ", ".join(headers)

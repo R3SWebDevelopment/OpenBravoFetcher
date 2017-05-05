@@ -178,7 +178,7 @@ def generateCSV():
             file_path = 'csv/{}.csv'.format(name)
             with open(file_path, 'wb') as file:
                 writer = csv.writer(file, delimiter=',', quoting=csv.QUOTE_ALL, dialect='excel')
-                writer.writerows([headers])
+                # writer.writerows([headers])
                 obData = readJSONData(name=name)
                 if obData is not None:
                     rows = []
@@ -188,6 +188,25 @@ def generateCSV():
                                else d.get(key, '') for key in definition]
                         rows.append(row)
                     writer.writerows(rows)
+
+
+def generateSQLScript():
+    array = OPEN_BRAVO_RESOURCES
+    for resource in array:
+        url = resource.get('url') or None
+        schema_name = resource.get('schema_name') or None
+        name = resource.get('name') or None
+        definition = load_definition(name=name)
+        if definition is not None:
+            headers = [definition.get(key) for key in definition.keys()]
+            file_path = 'syncPushSQL/{}.sql'.format(name)
+            with open(file_path, 'wb') as file:
+                columns = ", ".join(headers)
+                file_path = '/home/ubuntu/.virtualenvs/baysingers-v3/current/csv/{}.csv'.format(name)
+                sql_script = 'COPY "openBravo_{}" ({}) from \'{}\' ' \
+                             'with delimiter as \',\' quote as \'"\';'.format(name.lower(), columns, file_path)
+                file.write(sql_script)
+
 
 
 def generateSQL():
@@ -319,6 +338,7 @@ def load_definition(name=None):
 
 OB_DB_FIELDS = fetch_json('syncDefinition/db_fields.json')
 
-# full_sync()
+full_sync()
 # generateSQL()
 generateCSV()
+generateSQLScript()

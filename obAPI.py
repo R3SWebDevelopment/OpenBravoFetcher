@@ -208,7 +208,6 @@ def generateSQLScript():
                 file.write(sql_script)
 
 
-
 def generateSQL():
     array = OPEN_BRAVO_RESOURCES
     for resource in array:
@@ -220,7 +219,7 @@ def generateSQL():
         try:
             data = json.loads(data)
             data = normalizeTableFields(data=data, name=name)
-        except Exception ,e:
+        except Exception, e:
             print "generateSQL -- Exception: {}".format(e)
 #            traceback.print_exc(file=sys.stdout)
             data = None
